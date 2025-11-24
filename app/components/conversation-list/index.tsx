@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 import Header from '@/app/components/header'
 import type { ConversationItem } from '@/types/app'
@@ -11,6 +11,24 @@ interface ConversationListProps {
   onSelectConversation: (id: string) => void
   onNewConversation: () => void
   onClose: () => void
+}
+
+const formatTime = (timestamp?: number) => {
+  if (!timestamp) return ''
+  const date = new Date(timestamp * 1000)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const diffMinutes = Math.floor(diff / (1000 * 60))
+  const diffHours = Math.floor(diff / (1000 * 60 * 60))
+  const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} min ago`
+  }
+  if (diffHours < 24 && now.getDate() === date.getDate()) {
+    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+  }
+  return `${date.getMonth() + 1}.${date.getDate()}.${date.getFullYear().toString().slice(2)}`
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
@@ -30,7 +48,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
     )
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-white">
       <Header 
         title={APP_INFO?.title || 'Migo'} 
         onClose={onClose} 
@@ -38,15 +56,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
       
       <div className="flex-1 flex flex-col overflow-hidden max-w-[800px] w-full mx-auto relative">
         {/* Search Bar */}
-        <div className="p-4 bg-gray-50 sticky top-0 z-10">
+        <div className="px-4 py-2 bg-white sticky top-0 z-10 border-b border-gray-100">
           <div className="relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
             </div>
             <input
               type="text"
-              className="block w-full rounded-lg border-0 py-2.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white outline-none"
-              placeholder="Search conversations..."
+              className="block w-full rounded-lg border border-gray-200 py-2 pl-10 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 bg-white outline-none"
+              placeholder="Search"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
@@ -54,35 +72,33 @@ const ConversationList: React.FC<ConversationListProps> = ({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto px-4 pb-24">
-          <div className="space-y-3">
+        <div className="flex-1 overflow-y-auto pb-24">
+          <div className="flex flex-col">
             {filteredList.map((item) => {
-                const isActive = item.id === currConversationId
+                // const isActive = item.id === currConversationId
                 return (
                   <div
                     key={item.id}
                     onClick={() => onSelectConversation(item.id)}
-                    className={`group relative flex flex-col gap-1 p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-md bg-white ${
-                      isActive 
-                        ? 'border-primary-600 ring-1 ring-primary-600' 
-                        : 'border-gray-200 hover:border-primary-300'
-                    }`}
+                    className="group flex items-start gap-3 p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
                   >
-                    <div className="flex justify-between items-start">
-                        <h3 className={`text-base font-semibold line-clamp-1 pr-2 ${isActive ? 'text-primary-700' : 'text-gray-900'}`}>
-                            {item.name}
-                        </h3>
-                        {/* Simulated time for now since it's not in the type */}
-                        <span className="text-xs text-gray-400 shrink-0 mt-1">Today</span>
+                    <div className="shrink-0 mt-1 p-2 rounded-full bg-blue-50 text-blue-600">
+                        <ChatBubbleOvalLeftEllipsisIcon className="h-5 w-5" />
                     </div>
-                    <p className="text-sm text-gray-500 line-clamp-2">
-                        {/* Use introduction or inputs if available, fallback to a generic text if empty */}
-                        {item.introduction || (item.inputs ? Object.values(item.inputs).join(' ') : '') || t('app.chat.newChatDefaultName')}
-                    </p>
                     
-                    {isActive && (
-                        <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary-600 rounded-r-full" />
-                    )}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-1">
+                            <h3 className="text-base font-semibold text-gray-900 truncate pr-2">
+                                {item.name}
+                            </h3>
+                            <span className="text-xs text-gray-400 whitespace-nowrap shrink-0">
+                                {formatTime(item.created_at)}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-500 line-clamp-2">
+                            {item.introduction || (item.inputs ? Object.values(item.inputs).join(' ') : '') || t('app.chat.newChatDefaultName')}
+                        </p>
+                    </div>
                   </div>
                 )
             })}
@@ -96,13 +112,12 @@ const ConversationList: React.FC<ConversationListProps> = ({
         </div>
 
         {/* Bottom Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-8">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-100">
             <button
                 onClick={onNewConversation}
-                className="w-full flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3.5 px-4 rounded-full shadow-lg transition-colors duration-200"
+                className="w-full flex items-center justify-center gap-2 bg-[#1C1C1E] hover:bg-gray-800 text-white font-medium py-3.5 px-4 rounded-lg shadow-sm transition-colors duration-200"
             >
-                <PlusIcon className="h-5 w-5" />
-                Start New Conversation
+                Start new conversation
             </button>
         </div>
       </div>
@@ -111,4 +126,3 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }
 
 export default ConversationList
-
