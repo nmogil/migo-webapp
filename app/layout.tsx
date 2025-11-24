@@ -1,7 +1,17 @@
+import type { Metadata } from 'next'
 import { getLocaleOnServer } from '@/i18n/server'
 
 import './styles/globals.css'
 import './styles/markdown.scss'
+
+export const metadata: Metadata = {
+  title: 'Pennie AI - Migo',
+  description: 'Your automated AI financial advisor',
+  icons: {
+    icon: '/migo-logo-removebg-preview.png',
+    apple: '/migo-logo-removebg-preview.png',
+  },
+}
 
 const LocaleLayout = async ({
   children,
