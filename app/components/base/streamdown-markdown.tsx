@@ -1,6 +1,5 @@
 'use client'
-import { Streamdown } from 'streamdown'
-import 'katex/dist/katex.min.css'
+import { Markdown } from './markdown'
 
 interface StreamdownMarkdownProps {
   content: string
@@ -10,7 +9,7 @@ interface StreamdownMarkdownProps {
 export function StreamdownMarkdown({ content, className = '' }: StreamdownMarkdownProps) {
   return (
     <div className={`streamdown-markdown ${className}`}>
-      <Streamdown>{content}</Streamdown>
+      <Markdown content={content} />
     </div>
   )
 }
