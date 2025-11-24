@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import TemplateVarPanel, { PanelTitle, VarOpBtnGroup } from '../value-panel'
 import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment'
 import s from './style.module.css'
-import { AppInfoComp, ChatBtn, EditBtn, FootLogo, PromptTemplate } from './massive-component'
+import { AppInfoComp, ChatBtn, FootLogo, PromptTemplate } from './massive-component'
 import type { AppInfo, PromptConfig } from '@/types/app'
 import Toast from '@/app/components/base/toast'
 import Select from '@/app/components/base/select'
@@ -102,7 +102,7 @@ const Welcome: FC<IWelcomeProps> = ({
     return (
       <div className='space-y-3'>
         {promptConfig.prompt_variables.map((item) => {
-          if (item.key === 'sfdc_lead_id')
+          if (item.key === 'sfdc_lead_id' || item.key === 'custom_context')
             return null
           return (
             <div className='tablet:flex items-start mobile:space-y-2 tablet:space-y-0 mobile:text-xs tablet:text-sm' key={item.key}>
@@ -303,12 +303,6 @@ const Welcome: FC<IWelcomeProps> = ({
               className='mb-1'
             />
             <PromptTemplate html={highLightPromoptTemplate} />
-            {isFold && (
-              <div className='flex items-center justify-between mt-3 border-t border-indigo-100 pt-4 text-xs text-indigo-600'>
-                <span className='text-gray-700'>{t('app.chat.configStatusDes')}</span>
-                <EditBtn onClick={() => setIsFold(false)} />
-              </div>
-            )}
           </>
         }
       >
@@ -327,11 +321,8 @@ const Welcome: FC<IWelcomeProps> = ({
         header={
           <div className='flex items-center justify-between text-indigo-600'>
             <PanelTitle
-              title={!isFold ? t('app.chat.privatePromptConfigTitle') : t('app.chat.configStatusDes')}
+              title={t('app.chat.privatePromptConfigTitle')}
             />
-            {isFold && (
-              <EditBtn onClick={() => setIsFold(false)} />
-            )}
           </div>
         }
       >
@@ -352,49 +343,38 @@ const Welcome: FC<IWelcomeProps> = ({
       </div>)
   }
 
+  const renderMigoWelcome = () => {
+    return (
+      <div className={s.migoContainer}>
+        <div className="text-center mb-8">
+          <div className={s.migoLogo}></div>
+          <h1 className="text-white text-3xl font-bold mt-4">Hi, I&apos;m Migo!</h1>
+          <p className="text-white text-xl mt-2">Your automated AI financial advisor</p>
+        </div>
+
+        <div className={s.migoCard}>
+          <h2 className="text-gray-900 font-bold text-lg mb-2">Start new conversation</h2>
+          <p className="text-gray-500 text-sm mb-6">Ask any question. I&apos;ll help you make sense of financial analysis.</p>
+          <button
+            className={s.migoButton}
+            onClick={() => onStartChat(inputs)}
+          >
+            Send message
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasSetInputs) {
+    return renderMigoWelcome()
+  }
+
   return (
     <div className='relative mobile:min-h-[48px] tablet:min-h-[64px]'>
       {hasSetInputs && renderHeader()}
       <div className='mx-auto pc:w-[794px] max-w-full mobile:w-full px-3.5'>
-        {/*  Has't set inputs  */}
-        {
-          !hasSetInputs && (
-            <div className='mobile:pt-[72px] tablet:pt-[128px] pc:pt-[200px]'>
-              {hasVar
-                ? (
-                  renderVarPanel()
-                )
-                : (
-                  renderNoVarPanel()
-                )}
-            </div>
-          )
-        }
-
         {/* Has set inputs */}
-        {hasSetInputs && renderHasSetInputs()}
-
-        {/* foot */}
-        {!hasSetInputs && (
-          <div className='mt-4 flex justify-between items-center h-8 text-xs text-gray-400'>
-
-            {siteInfo.privacy_policy
-              ? <div>{t('app.chat.privacyPolicyLeft')}
-                <a
-                  className='text-gray-500'
-                  href={siteInfo.privacy_policy}
-                  target='_blank'
-                >{t('app.chat.privacyPolicyMiddle')}</a>
-                {t('app.chat.privacyPolicyRight')}
-              </div>
-              : <div>
-              </div>}
-            <a className='flex items-center pr-3 space-x-3' href="https://dify.ai/" target="_blank">
-              <span className='uppercase'>{t('app.chat.powerBy')}</span>
-              <FootLogo />
-            </a>
-          </div>
-        )}
       </div>
     </div >
   )

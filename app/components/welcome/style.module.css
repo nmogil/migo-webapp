@@ -27,3 +27,56 @@
   background: url(./icons/logo.png) center center no-repeat;
   background-size: contain;
 }
+
+/* Migo Specific Styles */
+.migoContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, #4E75FF 0%, #9149FF 100%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.migoLogo {
+  width: 120px;
+  height: 120px;
+  background: url(/migo-logo-removebg-preview.png) center center no-repeat;
+  background-size: contain;
+  margin: 0 auto 24px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.migoCard {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0px 20px 24px -4px rgba(16, 24, 40, 0.1), 0px 8px 8px -4px rgba(16, 24, 40, 0.04);
+  text-align: center;
+}
+
+.migoButton {
+  background: linear-gradient(90deg, #4E75FF 0%, #9149FF 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  width: 100%;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 24px;
+}
+
+.migoButton:hover {
+  opacity: 0.9;
+}
