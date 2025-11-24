@@ -1,6 +1,7 @@
 'use client'
 import type { FC } from 'react'
 import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import TemplateVarPanel, { PanelTitle, VarOpBtnGroup } from '../value-panel'
 import FileUploaderInAttachmentWrapper from '../base/file-uploader-in-attachment'
@@ -38,6 +39,8 @@ const Welcome: FC<IWelcomeProps> = ({
   onInputsChange,
 }) => {
   const { t } = useTranslation()
+  const searchParams = useSearchParams()
+  const sfdcLeadId = searchParams.get('sfdc_lead_id')
   const hasVar = promptConfig.prompt_variables.length > 0
   const [isFold, setIsFold] = useState<boolean>(true)
   const [inputs, setInputs] = useState<Record<string, any>>((() => {
@@ -46,7 +49,11 @@ const Welcome: FC<IWelcomeProps> = ({
     const res: Record<string, any> = {}
     if (promptConfig) {
       promptConfig.prompt_variables.forEach((item) => {
-        res[item.key] = ''
+        if (item.key === 'sfdc_lead_id' && sfdcLeadId) {
+          res[item.key] = sfdcLeadId
+        } else {
+          res[item.key] = ''
+        }
       })
     }
     return res
@@ -56,7 +63,11 @@ const Welcome: FC<IWelcomeProps> = ({
       const res: Record<string, any> = {}
       if (promptConfig) {
         promptConfig.prompt_variables.forEach((item) => {
-          res[item.key] = ''
+          if (item.key === 'sfdc_lead_id' && sfdcLeadId) {
+            res[item.key] = sfdcLeadId
+          } else {
+            res[item.key] = ''
+          }
         })
       }
       setInputs(res)
@@ -64,7 +75,7 @@ const Welcome: FC<IWelcomeProps> = ({
     else {
       setInputs(savedInputs)
     }
-  }, [savedInputs])
+  }, [savedInputs, sfdcLeadId])
 
   const highLightPromoptTemplate = (() => {
     if (!promptConfig) { return '' }
@@ -90,83 +101,87 @@ const Welcome: FC<IWelcomeProps> = ({
   const renderInputs = () => {
     return (
       <div className='space-y-3'>
-        {promptConfig.prompt_variables.map(item => (
-          <div className='tablet:flex items-start mobile:space-y-2 tablet:space-y-0 mobile:text-xs tablet:text-sm' key={item.key}>
-            <label className={`flex-shrink-0 flex items-center tablet:leading-9 mobile:text-gray-700 tablet:text-gray-900 mobile:font-medium pc:font-normal ${s.formLabel}`}>{item.name}</label>
-            {item.type === 'select'
-              && (
-                <Select
-                  className='w-full'
-                  defaultValue={inputs?.[item.key]}
-                  onSelect={(i) => { setInputs({ ...inputs, [item.key]: i.value }) }}
-                  items={(item.options || []).map(i => ({ name: i, value: i }))}
-                  allowSearch={false}
-                  bgClassName='bg-gray-50'
+        {promptConfig.prompt_variables.map((item) => {
+          if (item.key === 'sfdc_lead_id')
+            return null
+          return (
+            <div className='tablet:flex items-start mobile:space-y-2 tablet:space-y-0 mobile:text-xs tablet:text-sm' key={item.key}>
+              <label className={`flex-shrink-0 flex items-center tablet:leading-9 mobile:text-gray-700 tablet:text-gray-900 mobile:font-medium pc:font-normal ${s.formLabel}`}>{item.name}</label>
+              {item.type === 'select'
+                && (
+                  <Select
+                    className='w-full'
+                    defaultValue={inputs?.[item.key]}
+                    onSelect={(i) => { setInputs({ ...inputs, [item.key]: i.value }) }}
+                    items={(item.options || []).map(i => ({ name: i, value: i }))}
+                    allowSearch={false}
+                    bgClassName='bg-gray-50'
+                  />
+                )}
+              {item.type === 'string' && (
+                <input
+                  placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+                  value={inputs?.[item.key] || ''}
+                  onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
+                  className={'w-full flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50'}
+                  maxLength={item.max_length || DEFAULT_VALUE_MAX_LEN}
                 />
               )}
-            {item.type === 'string' && (
-              <input
-                placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
-                value={inputs?.[item.key] || ''}
-                onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
-                className={'w-full flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50'}
-                maxLength={item.max_length || DEFAULT_VALUE_MAX_LEN}
-              />
-            )}
-            {item.type === 'paragraph' && (
-              <textarea
-                className="w-full h-[104px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50"
-                placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
-                value={inputs?.[item.key] || ''}
-                onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
-              />
-            )}
-            {item.type === 'number' && (
-              <input
-                type="number"
-                className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
-                placeholder={`${item.name}${!item.required ? `(${t('appDebug.variableTable.optional')})` : ''}`}
-                value={inputs[item.key]}
-                onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
-              />
-            )}
+              {item.type === 'paragraph' && (
+                <textarea
+                  className="w-full h-[104px] flex-grow py-2 pl-3 pr-3 box-border rounded-lg bg-gray-50"
+                  placeholder={`${item.name}${!item.required ? `(${t('app.variableTable.optional')})` : ''}`}
+                  value={inputs?.[item.key] || ''}
+                  onChange={(e) => { setInputs({ ...inputs, [item.key]: e.target.value }) }}
+                />
+              )}
+              {item.type === 'number' && (
+                <input
+                  type="number"
+                  className="block w-full p-2 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-xs focus:ring-blue-500 focus:border-blue-500 "
+                  placeholder={`${item.name}${!item.required ? `(${t('appDebug.variableTable.optional')})` : ''}`}
+                  value={inputs[item.key]}
+                  onChange={(e) => { onInputsChange({ ...inputs, [item.key]: e.target.value }) }}
+                />
+              )}
 
-            {
-              item.type === 'file' && (
-                <FileUploaderInAttachmentWrapper
-                  fileConfig={{
-                    allowed_file_types: item.allowed_file_types,
-                    allowed_file_extensions: item.allowed_file_extensions,
-                    allowed_file_upload_methods: item.allowed_file_upload_methods!,
-                    number_limits: 1,
-                    fileUploadConfig: {} as any,
-                  }}
-                  onChange={(files) => {
-                    setInputs({ ...inputs, [item.key]: files[0] })
-                  }}
-                  value={inputs?.[item.key] || []}
-                />
-              )
-            }
-            {
-              item.type === 'file-list' && (
-                <FileUploaderInAttachmentWrapper
-                  fileConfig={{
-                    allowed_file_types: item.allowed_file_types,
-                    allowed_file_extensions: item.allowed_file_extensions,
-                    allowed_file_upload_methods: item.allowed_file_upload_methods!,
-                    number_limits: item.max_length,
-                    fileUploadConfig: {} as any,
-                  }}
-                  onChange={(files) => {
-                    setInputs({ ...inputs, [item.key]: files })
-                  }}
-                  value={inputs?.[item.key] || []}
-                />
-              )
-            }
-          </div>
-        ))}
+              {
+                item.type === 'file' && (
+                  <FileUploaderInAttachmentWrapper
+                    fileConfig={{
+                      allowed_file_types: item.allowed_file_types,
+                      allowed_file_extensions: item.allowed_file_extensions,
+                      allowed_file_upload_methods: item.allowed_file_upload_methods!,
+                      number_limits: 1,
+                      fileUploadConfig: {} as any,
+                    }}
+                    onChange={(files) => {
+                      setInputs({ ...inputs, [item.key]: files[0] })
+                    }}
+                    value={inputs?.[item.key] || []}
+                  />
+                )
+              }
+              {
+                item.type === 'file-list' && (
+                  <FileUploaderInAttachmentWrapper
+                    fileConfig={{
+                      allowed_file_types: item.allowed_file_types,
+                      allowed_file_extensions: item.allowed_file_extensions,
+                      allowed_file_upload_methods: item.allowed_file_upload_methods!,
+                      number_limits: item.max_length,
+                      fileUploadConfig: {} as any,
+                    }}
+                    onChange={(files) => {
+                      setInputs({ ...inputs, [item.key]: files })
+                    }}
+                    value={inputs?.[item.key] || []}
+                  />
+                )
+              }
+            </div>
+          )
+        })}
       </div>
     )
   }
